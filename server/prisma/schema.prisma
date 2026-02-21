@@ -1,0 +1,180 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  student
+  teacher
+  admin
+}
+
+enum ThemeMode {
+  system
+  light
+  dark
+}
+
+enum NotificationStatus {
+  unread
+  read
+}
+
+enum NotificationType {
+  grade
+  homework
+  announcement
+  system
+}
+
+model User {
+  id              String           @id @default(uuid())
+  login           String           @unique
+  passwordHash    String
+  role            Role             @default(student)
+  firstName       String
+  lastName        String
+  middleName      String?
+  classRoomId     String?
+  classRoom       ClassRoom?       @relation("ClassRoomStudents", fields: [classRoomId], references: [id], onDelete: SetNull)
+  taughtSubjects  Subject[]        @relation("SubjectTeacher")
+  lessons         Lesson[]         @relation("LessonTeacher")
+  grades          Grade[]          @relation("StudentGrades")
+  createdGrades   Grade[]          @relation("GradeCreatedBy")
+  notifications   Notification[]
+  settings        UserSettings?
+  refreshSessions RefreshSession[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([classRoomId, role])
+}
+
+model ClassRoom {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  course    Int
+  groupName String
+  students  User[]    @relation("ClassRoomStudents")
+  subjects  Subject[]
+  lessons   Lesson[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([course, groupName])
+}
+
+model Subject {
+  id          String    @id @default(uuid())
+  name        String
+  classRoomId String
+  teacherId   String
+  classRoom   ClassRoom @relation(fields: [classRoomId], references: [id], onDelete: Cascade)
+  teacher     User      @relation("SubjectTeacher", fields: [teacherId], references: [id], onDelete: Restrict)
+  grades      Grade[]
+  lessons     Lesson[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([name, classRoomId])
+  @@index([classRoomId])
+  @@index([teacherId])
+}
+
+model Grade {
+  id          String    @id @default(uuid())
+  subjectId   String
+  studentId   String
+  createdById String
+  value       Int
+  comment     String?
+  gradedAt    DateTime
+  deletedAt   DateTime?
+  subject     Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  student     User      @relation("StudentGrades", fields: [studentId], references: [id], onDelete: Cascade)
+  createdBy   User      @relation("GradeCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([subjectId, studentId, deletedAt])
+  @@index([studentId, gradedAt])
+}
+
+model Lesson {
+  id          String    @id @default(uuid())
+  subjectId   String
+  classRoomId String
+  teacherId   String
+  startsAt    DateTime
+  endsAt      DateTime
+  room        String?
+  subject     Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  classRoom   ClassRoom @relation(fields: [classRoomId], references: [id], onDelete: Cascade)
+  teacher     User      @relation("LessonTeacher", fields: [teacherId], references: [id], onDelete: Restrict)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([classRoomId, startsAt])
+  @@index([teacherId, startsAt])
+  @@index([startsAt, endsAt])
+}
+
+model Notification {
+  id        String             @id @default(uuid())
+  userId    String
+  title     String
+  body      String
+  type      NotificationType   @default(system)
+  status    NotificationStatus @default(unread)
+  readAt    DateTime?
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@index([userId, status, createdAt])
+}
+
+model UserSettings {
+  id                         String    @id @default(uuid())
+  userId                     String    @unique
+  themeMode                  ThemeMode @default(system)
+  notificationsEnabled       Boolean   @default(true)
+  notificationsGrades        Boolean   @default(true)
+  notificationsHomework      Boolean   @default(true)
+  notificationsAnnouncements Boolean   @default(true)
+  user                       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt                  DateTime  @default(now())
+  updatedAt                  DateTime  @updatedAt
+}
+
+model RefreshSession {
+  id               String           @id @default(uuid())
+  userId           String
+  tokenHash        String           @unique
+  accessTokenHash  String           @unique
+  accessExpiresAt  DateTime
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  revocationReason String?
+  parentId         String?
+  userAgent        String?
+  ip               String?
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent           RefreshSession?  @relation("RefreshSessionChain", fields: [parentId], references: [id], onDelete: SetNull)
+  children         RefreshSession[] @relation("RefreshSessionChain")
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([userId, revokedAt, expiresAt])
+  @@index([accessExpiresAt, revokedAt])
+  @@index([parentId])
+}

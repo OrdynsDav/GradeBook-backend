@@ -1,0 +1,47 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: gradebook
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - gradebook_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d gradebook']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/gradebook?schema=public
+      AUTH_ACCESS_TTL_MINUTES: 15
+      AUTH_REFRESH_TTL_DAYS: 30
+      AUTH_TOKEN_PEPPER: docker_token_pepper_change_me
+      CORS_ORIGIN: '*'
+      RATE_LIMIT_TTL_MS: 60000
+      RATE_LIMIT_LIMIT: 100
+      AUTH_RATE_LIMIT_TTL_MS: 60000
+      AUTH_RATE_LIMIT_LIMIT: 10
+      SWAGGER_ENABLED: 'false'
+      LOG_LEVEL: info
+    ports:
+      - '3000:3000'
+
+volumes:
+  gradebook_db_data:
