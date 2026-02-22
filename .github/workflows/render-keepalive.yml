@@ -1,0 +1,23 @@
+# Пинг Render каждые 12 минут, чтобы сервис не засыпал.
+# Один раз задайте в репозитории: Settings → Variables and secrets → Variables →
+#   RENDER_APP_URL = https://ваш-сервис.onrender.com (без слэша в конце)
+
+name: Render keep-alive
+
+on:
+  schedule:
+    - cron: '*/12 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health
+        run: |
+          URL="${{ vars.RENDER_APP_URL }}"
+          if [ -z "$URL" ]; then
+            echo "RENDER_APP_URL not set in repo Variables — skipping"
+            exit 0
+          fi
+          curl -sf --max-time 60 "${URL}/api/v1/health" && echo " OK" || true

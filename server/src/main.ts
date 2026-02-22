@@ -12,7 +12,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   app.useLogger(app.get(Logger));
 
-  // app.setGlobalPrefix('api/v1'); // Временно убрал для диагностики
+  app.setGlobalPrefix('api/v1');
 
   app.use(helmet());
 
@@ -22,9 +22,9 @@ async function bootstrap() {
       corsOrigin === '*'
         ? true
         : corsOrigin
-            .split(',')
-            .map((origin) => origin.trim())
-            .filter(Boolean),
+          .split(',')
+          .map((origin) => origin.trim())
+          .filter(Boolean),
     credentials: true,
   });
 
@@ -55,6 +55,7 @@ async function bootstrap() {
   app.enableShutdownHooks();
 
   const port = configService.get<number>('port') ?? 3000;
-  await app.listen(port);
+  const host = configService.get<string>('host') ?? '0.0.0.0';
+  await app.listen(port, host);
 }
 void bootstrap();

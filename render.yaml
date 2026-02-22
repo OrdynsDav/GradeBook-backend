@@ -1,0 +1,14 @@
+# Render Blueprint — деплой бэкенда GradeBook.
+# В Dashboard задайте вручную: DATABASE_URL, AUTH_TOKEN_PEPPER (и при необходимости CORS_ORIGIN).
+# Подробнее: server/DEPLOYMENT.md
+
+services:
+  - type: web
+    runtime: docker
+    name: gradebook-api
+    rootDir: server
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production

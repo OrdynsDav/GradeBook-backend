@@ -13,7 +13,6 @@ import { PrismaModule } from './common/prisma/prisma.module';
 import { AllExceptionsFilter } from './common/security/filters/all-exceptions.filter';
 import { AccessTokenGuard } from './common/security/guards/access-token.guard';
 import { RolesGuard } from './common/security/guards/roles.guard';
-// import { RequestIdMiddleware } from './common/security/middleware/request-id.middleware';
 import configuration from './config/configuration';
 import { envValidationSchema } from './config/env.validation';
 import { ScheduleModule } from './schedule/schedule.module';
@@ -110,9 +109,4 @@ import { UsersModule } from './users/users.module';
     },
   ],
 })
-export class AppModule {
-  // Временно убрал middleware - он блокирует роуты
-  // configure(consumer: MiddlewareConsumer): void {
-  //   consumer.apply(RequestIdMiddleware).forRoutes('*');
-  // }
-}
+export class AppModule {}

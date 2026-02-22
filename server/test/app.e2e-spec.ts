@@ -49,12 +49,12 @@ describe('GradeBook API (e2e)', () => {
   });
 
   it('denies unauthorized access to protected endpoint', async () => {
-    await request(app.getHttpServer()).get('/users/me').expect(401);
+    await request(app.getHttpServer()).get('/api/v1/users/me').expect(401);
   });
 
   it('login -> me flow works', async () => {
     const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/api/v1/auth/login')
       .send({
         login: studentLogin,
         password,
@@ -65,7 +65,7 @@ describe('GradeBook API (e2e)', () => {
     expect(accessToken).toBeDefined();
 
     const meResponse = await request(app.getHttpServer())
-      .get('/users/me')
+      .get('/api/v1/users/me')
       .set(authHeader(accessToken))
       .expect(200);
 
@@ -75,7 +75,7 @@ describe('GradeBook API (e2e)', () => {
 
   it('refresh token rotation invalidates previous token', async () => {
     const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/api/v1/auth/login')
       .send({
         login: studentLogin,
         password,
@@ -85,14 +85,14 @@ describe('GradeBook API (e2e)', () => {
     const oldRefreshToken = loginResponse.body.refreshToken as string;
 
     const refreshed = await request(app.getHttpServer())
-      .post('/auth/refresh')
+      .post('/api/v1/auth/refresh')
       .send({ refreshToken: oldRefreshToken })
       .expect(200);
 
     expect(refreshed.body.refreshToken).toBeDefined();
 
     await request(app.getHttpServer())
-      .post('/auth/refresh')
+      .post('/api/v1/auth/refresh')
       .send({ refreshToken: oldRefreshToken })
       .expect(401);
   });
@@ -102,7 +102,7 @@ describe('GradeBook API (e2e)', () => {
     const teacherTokens = await login(teacherLogin);
 
     await request(app.getHttpServer())
-      .post(`/subjects/${subjectId}/grades`)
+      .post(`/api/v1/subjects/${subjectId}/grades`)
       .set(authHeader(studentTokens.accessToken))
       .send({
         studentId,
@@ -112,7 +112,7 @@ describe('GradeBook API (e2e)', () => {
       .expect(403);
 
     await request(app.getHttpServer())
-      .post(`/subjects/${subjectId}/grades`)
+      .post(`/api/v1/subjects/${subjectId}/grades`)
       .set(authHeader(teacherTokens.accessToken))
       .send({
         studentId,
@@ -126,7 +126,7 @@ describe('GradeBook API (e2e)', () => {
     const studentTokens = await login(studentLogin);
 
     const response = await request(app.getHttpServer())
-      .get(`/schedule/week?date=${weekDate}`)
+      .get(`/api/v1/schedule/week?date=${weekDate}`)
       .set(authHeader(studentTokens.accessToken))
       .expect(200);
 
@@ -138,7 +138,7 @@ describe('GradeBook API (e2e)', () => {
     const studentTokens = await login(studentLogin);
 
     const listResponse = await request(app.getHttpServer())
-      .get('/notifications?status=all&page=1&limit=1')
+      .get('/api/v1/notifications?status=all&page=1&limit=1')
       .set(authHeader(studentTokens.accessToken))
       .expect(200);
 
@@ -147,12 +147,12 @@ describe('GradeBook API (e2e)', () => {
 
     const notificationId = listResponse.body.items[0].id as string;
     await request(app.getHttpServer())
-      .patch(`/notifications/${notificationId}/read`)
+      .patch(`/api/v1/notifications/${notificationId}/read`)
       .set(authHeader(studentTokens.accessToken))
       .expect(200);
 
     const readAllResponse = await request(app.getHttpServer())
-      .patch('/notifications/read-all')
+      .patch('/api/v1/notifications/read-all')
       .set(authHeader(studentTokens.accessToken))
       .expect(200);
 
@@ -163,7 +163,7 @@ describe('GradeBook API (e2e)', () => {
     const adminTokens = await login(adminLogin);
 
     await request(app.getHttpServer())
-      .post('/users')
+      .post('/api/v1/users')
       .set(authHeader(adminTokens.accessToken))
       .send({
         role: Role.student,
@@ -194,7 +194,7 @@ describe('GradeBook API (e2e)', () => {
     }
 
     const createdLesson = await request(app.getHttpServer())
-      .post('/schedule')
+      .post('/api/v1/schedule')
       .set(authHeader(adminTokens.accessToken))
       .send({
         subjectId,
@@ -206,13 +206,13 @@ describe('GradeBook API (e2e)', () => {
 
     const lessonId = createdLesson.body.id as string;
     await request(app.getHttpServer())
-      .patch(`/schedule/${lessonId}`)
+      .patch(`/api/v1/schedule/${lessonId}`)
       .set(authHeader(adminTokens.accessToken))
       .send({ room: 'E2E-203' })
       .expect(200);
 
     await request(app.getHttpServer())
-      .delete(`/schedule/${lessonId}`)
+      .delete(`/api/v1/schedule/${lessonId}`)
       .set(authHeader(adminTokens.accessToken))
       .expect(200);
   });
@@ -222,7 +222,7 @@ describe('GradeBook API (e2e)', () => {
     refreshToken: string;
   }> {
     const response = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/api/v1/auth/login')
       .send({ login: loginValue, password })
       .expect(200);
 

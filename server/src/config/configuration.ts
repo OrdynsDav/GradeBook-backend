@@ -1,6 +1,8 @@
 export default () => ({
   nodeEnv: process.env.NODE_ENV ?? 'development',
   port: Number(process.env.PORT ?? 3000),
+  /** Хост для listen: 0.0.0.0 — доступ с эмулятора/телефона по IP ПК; 127.0.0.1 — только localhost */
+  host: process.env.HOST ?? '0.0.0.0',
   corsOrigin: process.env.CORS_ORIGIN ?? '*',
   swaggerEnabled:
     (process.env.SWAGGER_ENABLED ?? 'true').toLowerCase() === 'true',
