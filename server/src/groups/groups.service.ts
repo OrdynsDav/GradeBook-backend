@@ -24,7 +24,7 @@ export class GroupsService {
   async create(dto: CreateGroupDto) {
     const course = dto.course;
     const groupName = dto.groupName.trim().toUpperCase();
-    const name = `${course}${groupName}`;
+    const name = groupName;
     try {
       return await this.prisma.group.create({
         data: {

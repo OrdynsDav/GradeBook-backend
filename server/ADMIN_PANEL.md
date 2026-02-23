@@ -41,7 +41,7 @@
 | `middleName`| string | нет          | Отчество, до 64 символов |
 | `course`   | number  | для student  | Курс 1–4 |
 | `group`    | string  | для student  | Группа (буква/название), 1–32 символа |
-| `subjects` | array   | для teacher  | Массив предметов. Элемент: `{ "name": "Название", "groupId": "uuid" }` (одна группа) или `{ "name": "Название", "groupIds": ["uuid", ...] }` (один предмет сразу для нескольких групп). Группы должны существовать (создаются через POST /groups) |
+| `subjects` | array   | для teacher  | Массив предметов. Элемент: по id — `groupId` (одна) или `groupIds` (несколько); по названию — `groups: ["И14-1", "И14-2"]`. Пример: `{ "name": "Математика", "groups": ["И14-1", "И14-2"] }`. Регистр имён групп не важен. |
 | `login`    | string  | да           | Уникальный логин, 3–64 символа, только `a-zA-Z0-9._-` |
 | `password` | string  | да           | Пароль, 8–128 символов |
 
@@ -84,12 +84,12 @@
   "password": "SecurePass123!",
   "subjects": [
     { "name": "Mathematics", "groupId": "e2f08ca8-6866-4df6-8d43-1c2f4d8f4488" },
-    { "name": "Physics", "groupIds": ["e2f08ca8-...", "a1b2c3d4-..."] }
+    { "name": "Математика", "groups": ["И14-1", "И14-2"] }
   ]
 }
 ```
 
-Один предмет для многих групп: используйте `groupIds` (массив UUID) вместо 40 одинаковых строк с одним именем. Группы предварительно создайте через **POST /groups** или при добавлении студентов.
+Один предмет для многих групп: укажите `groupIds` (массив UUID) или **`groups`** (массив названий групп, например `["И14-1", "И14-2"]`). Группы по названию ищутся без учёта регистра.
 
 Ответ `201`: объект пользователя (как в `GET /users/me`), с полем `group` для ученика.
 
@@ -113,7 +113,7 @@
 [
   {
     "id": "uuid",
-    "name": "1A",
+    "name": "A",
     "course": 1,
     "groupName": "A",
     "curatorId": null,
@@ -143,7 +143,7 @@
 }
 ```
 
-Ответ `201`: созданная группа (id, name, course, groupName, curatorId, createdAt, updatedAt). Имя группы формируется как `course` + `groupName` (например, `1A`).
+Ответ `201`: созданная группа (id, name, course, groupName, curatorId, createdAt, updatedAt). Поле `name` совпадает с `groupName` (без префикса курса), например `И14-1`.
 
 Ошибки: `400` — невалидные данные или группа с такой парой (курс + groupName) уже есть, `403` — не admin.
 
@@ -171,7 +171,7 @@
     "name": "Mathematics",
     "groupId": "uuid",
     "teacherId": "uuid",
-    "group": { "id": "uuid", "name": "1A" },
+    "group": { "id": "uuid", "name": "A" },
     "teacher": {
       "id": "uuid",
       "firstName": "Ivan",
@@ -234,7 +234,7 @@
   "endsAt": "2026-02-21T08:45:00.000Z",
   "room": "101",
   "subject": { "id": "uuid", "name": "Mathematics" },
-  "group": { "id": "uuid", "name": "1A", "course": 1, "groupName": "A" },
+  "group": { "id": "uuid", "name": "A", "course": 1, "groupName": "A" },
   "teacher": { "id": "uuid", "firstName": "Ivan", "lastName": "Petrov", "middleName": "Sergeevich" }
 }
 ```

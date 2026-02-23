@@ -59,7 +59,7 @@ model User {
 
 model Group {
   id        String    @id @default(uuid())
-  name      String    @unique
+  name      String    // отображаемое имя = groupName (без префикса курса)
   course    Int       // 1–4
   groupName String
   curatorId String?

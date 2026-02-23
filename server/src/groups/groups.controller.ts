@@ -32,7 +32,7 @@ export class GroupsController {
       example: [
         {
           id: 'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488',
-          name: '1A',
+          name: 'A',
           course: 1,
           groupName: 'A',
           curatorId: null,
@@ -55,7 +55,7 @@ export class GroupsController {
     schema: {
       example: {
         id: 'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488',
-        name: '1A',
+        name: 'A',
         course: 1,
         groupName: 'A',
         curatorId: null,

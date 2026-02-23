@@ -244,7 +244,7 @@ describe('GradeBook API (e2e)', () => {
     await prisma.group.deleteMany();
 
     const group = await prisma.group.create({
-      data: { name: 'E2E-1A', course: 1, groupName: 'A' },
+      data: { name: 'A', course: 1, groupName: 'A' },
     });
     groupId = group.id;
 

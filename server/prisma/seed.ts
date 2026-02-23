@@ -32,10 +32,10 @@ async function main() {
   await prisma.group.deleteMany();
 
   const groupA = await prisma.group.create({
-    data: { name: '1A', course: 1, groupName: 'A' },
+    data: { name: 'A', course: 1, groupName: 'A' },
   });
   const groupB = await prisma.group.create({
-    data: { name: '1B', course: 1, groupName: 'B' },
+    data: { name: 'B', course: 1, groupName: 'B' },
   });
 
   const admin = await prisma.user.create({

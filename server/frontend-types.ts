@@ -79,13 +79,15 @@ export interface UpdateMeRequest {
   middleName?: string;
 }
 
-/** Один предмет при создании учителя: одна группа (groupId) или несколько (groupIds) */
+/** Один предмет при создании учителя: по id (groupId/groupIds) или по названиям (groups) */
 export interface CreateTeacherSubjectItem {
   name: string;
-  /** Одна группа. Не указывать, если задан groupIds. */
+  /** Одна группа (UUID). */
   groupId?: string;
-  /** Несколько групп: один предмет сразу для многих групп. */
+  /** Несколько групп (UUID). */
   groupIds?: string[];
+  /** Несколько групп по названию (name/groupName). Пример: ["И14-1", "И14-2"]. Регистр не важен. */
+  groups?: string[];
 }
 
 export interface CreateUserByAdminRequest {

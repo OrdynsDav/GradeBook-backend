@@ -128,7 +128,7 @@ export class UsersService {
         create: {
           course: dto.course,
           groupName: groupNameOrCode,
-          name: `${dto.course}${groupNameOrCode}`,
+          name: groupNameOrCode,
         },
         update: {},
       });
@@ -160,15 +160,39 @@ export class UsersService {
     if (role === Role.teacher && dto.subjects?.length) {
       for (const item of dto.subjects) {
         const name = item.name.trim();
-        const groupIdsToUse =
-          item.groupIds?.length !== undefined && item.groupIds!.length > 0
-            ? item.groupIds!
-            : item.groupId
-              ? [item.groupId]
-              : null;
+        let groupIdsToUse: string[] | null = null;
+        if (item.groups?.length) {
+          const normalized = [
+            ...new Set(item.groups.map((g) => g.trim().toUpperCase())),
+          ].filter(Boolean);
+          if (!normalized.length) {
+            throw new BadRequestException(
+              'groups must contain at least one non-empty name.',
+            );
+          }
+          const found = await this.prisma.group.findMany({
+            where: { name: { in: normalized } },
+            select: { id: true, name: true },
+          });
+          const foundNames = new Set(found.map((g) => g.name));
+          const missing = normalized.filter((n) => !foundNames.has(n));
+          if (missing.length) {
+            throw new BadRequestException(
+              `Groups not found by name: ${missing.join(', ')}. Create them (POST /groups) or use groupId/groupIds.`,
+            );
+          }
+          groupIdsToUse = found.map((g) => g.id);
+        } else if (
+          item.groupIds?.length !== undefined &&
+          item.groupIds!.length > 0
+        ) {
+          groupIdsToUse = item.groupIds!;
+        } else if (item.groupId) {
+          groupIdsToUse = [item.groupId];
+        }
         if (!groupIdsToUse?.length) {
           throw new BadRequestException(
-            'Each subject must have either groupId or non-empty groupIds.',
+            'Each subject must have groupId, non-empty groupIds, or non-empty groups (group names).',
           );
         }
         for (const gid of groupIdsToUse) {

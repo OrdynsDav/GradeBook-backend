@@ -47,12 +47,24 @@ export class CreateTeacherSubjectDto {
       'a1b2c3d4-6866-4df6-8d43-1c2f4d8f4488',
     ],
     description:
-      'Массив UUID групп: один предмет сразу для нескольких групп. Вместо 40 строк с одним именем — одна строка с 40 groupIds.',
+      'Массив UUID групп: один предмет сразу для нескольких групп.',
   })
   @IsOptional()
   @IsArray()
   @IsUUID('4', { each: true })
   groupIds?: string[];
+
+  @ApiPropertyOptional({
+    example: ['И14-1', 'И14-2'],
+    description:
+      'Массив названий групп (name/groupName): один предмет сразу для нескольких групп. Пример: name: "Математика", groups: ["И14-1", "И14-2"]. Регистр не важен.',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @MinLength(1, { each: true })
+  @MaxLength(32, { each: true })
+  groups?: string[];
 }
 
 export class CreateUserByAdminDto {
@@ -117,16 +129,10 @@ export class CreateUserByAdminDto {
     type: [CreateTeacherSubjectDto],
     example: [
       { name: 'Mathematics', groupId: 'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488' },
-      {
-        name: 'Physics',
-        groupIds: [
-          'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488',
-          'a1b2c3d4-6866-4df6-8d43-1c2f4d8f4488',
-        ],
-      },
+      { name: 'Математика', groups: ['И14-1', 'И14-2'] },
     ],
     description:
-      'Предметы учителя (только для role=teacher): название + одна группа (groupId) или несколько (groupIds)',
+      'Предметы учителя (только для role=teacher): название + группа/группы по id (groupId/groupIds) или по названию (groups: массив имён групп)',
   })
   @ValidateIf((dto: CreateUserByAdminDto) => dto.role === CreatableRole.teacher)
   @IsOptional()
