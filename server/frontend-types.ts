@@ -79,10 +79,13 @@ export interface UpdateMeRequest {
   middleName?: string;
 }
 
-/** Один предмет при создании учителя */
+/** Один предмет при создании учителя: одна группа (groupId) или несколько (groupIds) */
 export interface CreateTeacherSubjectItem {
   name: string;
-  groupId: string;
+  /** Одна группа. Не указывать, если задан groupIds. */
+  groupId?: string;
+  /** Несколько групп: один предмет сразу для многих групп. */
+  groupIds?: string[];
 }
 
 export interface CreateUserByAdminRequest {
@@ -94,10 +97,27 @@ export interface CreateUserByAdminRequest {
   course?: number;
   /** Обязательно для student (название или код группы, например 1A) */
   group?: string;
-  /** Для teacher: массив предметов (название + groupId); в админ-панели поле «Предметы» */
+  /** Для teacher: массив предметов (name + groupId или name + groupIds); в админ-панели поле «Предметы» */
   subjects?: CreateTeacherSubjectItem[];
   login: string;
   password: string;
+}
+
+// ============ Groups ============
+
+export interface GroupListItem {
+  id: string;
+  name: string;
+  course: number;
+  groupName: string;
+  curatorId?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateGroupRequest {
+  course: number; // 1–4
+  groupName: string;
 }
 
 // ============ Dashboard ============

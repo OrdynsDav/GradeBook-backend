@@ -160,30 +160,46 @@ export class UsersService {
     if (role === Role.teacher && dto.subjects?.length) {
       for (const item of dto.subjects) {
         const name = item.name.trim();
-        const group = await this.prisma.group.findUnique({
-          where: { id: item.groupId },
-        });
-        if (!group) {
+        const groupIdsToUse =
+          item.groupIds?.length !== undefined && item.groupIds!.length > 0
+            ? item.groupIds!
+            : item.groupId
+              ? [item.groupId]
+              : null;
+        if (!groupIdsToUse?.length) {
           throw new BadRequestException(
-            `Group not found: ${item.groupId}. Add the group first or use a valid groupId.`,
+            'Each subject must have either groupId or non-empty groupIds.',
           );
         }
-        try {
-          await this.prisma.subject.create({
-            data: {
-              name,
-              groupId: item.groupId,
-              teacherId: user.id,
-            },
+        for (const gid of groupIdsToUse) {
+          const group = await this.prisma.group.findUnique({
+            where: { id: gid },
           });
-        } catch (err: unknown) {
-          const code = err && typeof err === 'object' && 'code' in err ? (err as { code: string }).code : '';
-          if (code === 'P2002') {
+          if (!group) {
             throw new BadRequestException(
-              `Subject "${name}" already exists in this group. Use another name or group.`,
+              `Group not found: ${gid}. Create the group first (POST /groups) or use a valid id.`,
             );
           }
-          throw err;
+          try {
+            await this.prisma.subject.create({
+              data: {
+                name,
+                groupId: gid,
+                teacherId: user.id,
+              },
+            });
+          } catch (err: unknown) {
+            const code =
+              err && typeof err === 'object' && 'code' in err
+                ? (err as { code: string }).code
+                : '';
+            if (code === 'P2002') {
+              throw new BadRequestException(
+                `Subject "${name}" already exists in group ${group.name}. Use another name or group.`,
+              );
+            }
+            throw err;
+          }
         }
       }
     }

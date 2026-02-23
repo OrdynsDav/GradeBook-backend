@@ -21,7 +21,7 @@ export enum CreatableRole {
   teacher = 'teacher',
 }
 
-/** Один предмет при создании учителя: название + группа */
+/** Один предмет при создании учителя: название + одна группа или несколько (groupIds) */
 export class CreateTeacherSubjectDto {
   @ApiProperty({
     example: 'Mathematics',
@@ -32,12 +32,27 @@ export class CreateTeacherSubjectDto {
   @MaxLength(64)
   name!: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488',
-    description: 'UUID группы, в которой ведётся предмет',
+    description:
+      'UUID одной группы. Не указывать, если задан groupIds (один предмет — много групп).',
   })
+  @IsOptional()
   @IsUUID()
-  groupId!: string;
+  groupId?: string;
+
+  @ApiPropertyOptional({
+    example: [
+      'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488',
+      'a1b2c3d4-6866-4df6-8d43-1c2f4d8f4488',
+    ],
+    description:
+      'Массив UUID групп: один предмет сразу для нескольких групп. Вместо 40 строк с одним именем — одна строка с 40 groupIds.',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsUUID('4', { each: true })
+  groupIds?: string[];
 }
 
 export class CreateUserByAdminDto {
@@ -102,10 +117,16 @@ export class CreateUserByAdminDto {
     type: [CreateTeacherSubjectDto],
     example: [
       { name: 'Mathematics', groupId: 'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488' },
-      { name: 'Physics', groupId: 'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488' },
+      {
+        name: 'Physics',
+        groupIds: [
+          'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488',
+          'a1b2c3d4-6866-4df6-8d43-1c2f4d8f4488',
+        ],
+      },
     ],
     description:
-      'Предметы учителя (только для role=teacher): название + группа для каждого',
+      'Предметы учителя (только для role=teacher): название + одна группа (groupId) или несколько (groupIds)',
   })
   @ValidateIf((dto: CreateUserByAdminDto) => dto.role === CreatableRole.teacher)
   @IsOptional()
