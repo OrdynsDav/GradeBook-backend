@@ -16,14 +16,22 @@ import { UpdateMeDto } from './dto/update-me.dto';
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getMe(userId: string) {
-    const user = await this.prisma.user.findUniqueOrThrow({
-      where: { id: userId },
-      include: {
-        group: true,
-      },
-    });
-
+  private toUserResponse(user: {
+    id: string;
+    login: string;
+    role: Role;
+    firstName: string;
+    lastName: string;
+    middleName: string | null;
+    group: {
+      id: string;
+      name: string;
+      course: number;
+      groupName: string;
+    } | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }) {
     return {
       id: user.id,
       login: user.login,
@@ -44,6 +52,22 @@ export class UsersService {
     };
   }
 
+  async listForAdmin() {
+    const users = await this.prisma.user.findMany({
+      include: { group: true },
+      orderBy: [{ role: 'asc' }, { lastName: 'asc' }, { firstName: 'asc' }],
+    });
+    return users.map((u) => this.toUserResponse(u));
+  }
+
+  async getMe(userId: string) {
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      include: { group: true },
+    });
+    return this.toUserResponse(user);
+  }
+
   async updateMe(userId: string, dto: UpdateMeDto) {
     const updatedUser = await this.prisma.user.update({
       where: { id: userId },
@@ -57,29 +81,9 @@ export class UsersService {
               : null
             : undefined,
       },
-      include: {
-        group: true,
-      },
+      include: { group: true },
     });
-
-    return {
-      id: updatedUser.id,
-      login: updatedUser.login,
-      role: updatedUser.role,
-      firstName: updatedUser.firstName,
-      lastName: updatedUser.lastName,
-      middleName: updatedUser.middleName,
-      group: updatedUser.group
-        ? {
-            id: updatedUser.group.id,
-            name: updatedUser.group.name,
-            course: updatedUser.group.course,
-            groupName: updatedUser.group.groupName,
-          }
-        : null,
-      createdAt: updatedUser.createdAt,
-      updatedAt: updatedUser.updatedAt,
-    };
+    return this.toUserResponse(updatedUser);
   }
 
   async createByAdmin(dto: CreateUserByAdminDto) {
@@ -228,23 +232,6 @@ export class UsersService {
       }
     }
 
-    return {
-      id: user.id,
-      login: user.login,
-      role: user.role,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      middleName: user.middleName,
-      group: user.group
-        ? {
-            id: user.group.id,
-            name: user.group.name,
-            course: user.group.course,
-            groupName: user.group.groupName,
-          }
-        : null,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
+    return this.toUserResponse(user);
   }
 }

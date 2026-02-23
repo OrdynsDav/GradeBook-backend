@@ -24,6 +24,33 @@ import { UsersService } from './users.service';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @Get()
+  @Roles(Role.admin)
+  @ApiOperation({ summary: 'Список всех пользователей (admin)' })
+  @ApiOkResponse({
+    description: 'Массив пользователей (как в GET /users/me, без пароля)',
+    schema: {
+      example: [
+        {
+          id: 'b4ea8b53-23ab-4f67-bf8f-58f1635b8f7a',
+          login: 'student.a',
+          role: 'student',
+          firstName: 'Nikita',
+          lastName: 'Ivanov',
+          middleName: null,
+          group: { id: 'uuid', name: 'A', course: 1, groupName: 'A' },
+          createdAt: '2026-02-21T16:00:00.000Z',
+          updatedAt: '2026-02-21T16:00:00.000Z',
+        },
+      ],
+    },
+  })
+  @ApiUnauthorizedResponse({ description: 'Требуется access token' })
+  @ApiForbiddenResponse({ description: 'Только admin может получать список пользователей' })
+  list() {
+    return this.usersService.listForAdmin();
+  }
+
   @Get('me')
   @ApiOperation({ summary: 'Получить профиль текущего пользователя' })
   @ApiOkResponse({
