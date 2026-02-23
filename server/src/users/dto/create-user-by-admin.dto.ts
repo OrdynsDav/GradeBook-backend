@@ -1,20 +1,43 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
+  IsArray,
   IsEnum,
   IsInt,
   IsOptional,
   IsString,
+  IsUUID,
   Matches,
   Max,
   MaxLength,
   Min,
   MinLength,
   ValidateIf,
+  ValidateNested,
 } from 'class-validator';
 
 export enum CreatableRole {
   student = 'student',
   teacher = 'teacher',
+}
+
+/** Один предмет при создании учителя: название + группа */
+export class CreateTeacherSubjectDto {
+  @ApiProperty({
+    example: 'Mathematics',
+    description: 'Название предмета',
+  })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(64)
+  name!: string;
+
+  @ApiProperty({
+    example: 'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488',
+    description: 'UUID группы, в которой ведётся предмет',
+  })
+  @IsUUID()
+  groupId!: string;
 }
 
 export class CreateUserByAdminDto {
@@ -61,7 +84,7 @@ export class CreateUserByAdminDto {
   @ValidateIf((dto: CreateUserByAdminDto) => dto.role === CreatableRole.student)
   @IsInt()
   @Min(1)
-  @Max(8)
+  @Max(4)
   course?: number;
 
   @ApiPropertyOptional({
@@ -74,6 +97,22 @@ export class CreateUserByAdminDto {
   @MinLength(1)
   @MaxLength(32)
   group?: string;
+
+  @ApiPropertyOptional({
+    type: [CreateTeacherSubjectDto],
+    example: [
+      { name: 'Mathematics', groupId: 'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488' },
+      { name: 'Physics', groupId: 'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488' },
+    ],
+    description:
+      'Предметы учителя (только для role=teacher): название + группа для каждого',
+  })
+  @ValidateIf((dto: CreateUserByAdminDto) => dto.role === CreatableRole.teacher)
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateTeacherSubjectDto)
+  subjects?: CreateTeacherSubjectDto[];
 
   @ApiProperty({
     example: 'student.a',

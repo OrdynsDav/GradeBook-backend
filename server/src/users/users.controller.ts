@@ -36,7 +36,7 @@ export class UsersController {
         firstName: 'Nikita',
         lastName: 'Ivanov',
         middleName: null,
-        classRoom: {
+        group: {
           id: 'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488',
           name: '10A',
         },
@@ -62,7 +62,7 @@ export class UsersController {
         firstName: 'Nikita',
         lastName: 'Ivanov',
         middleName: 'Petrovich',
-        classRoom: {
+        group: {
           id: 'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488',
           name: '10A',
         },
@@ -90,7 +90,7 @@ export class UsersController {
         firstName: 'Nikita',
         lastName: 'Ivanov',
         middleName: 'Petrovich',
-        classRoom: {
+        group: {
           id: 'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488',
           name: '2A',
           course: 2,

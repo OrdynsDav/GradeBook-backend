@@ -29,13 +29,13 @@ async function main() {
   await prisma.subject.deleteMany();
   await prisma.userSettings.deleteMany();
   await prisma.user.deleteMany();
-  await prisma.classRoom.deleteMany();
+  await prisma.group.deleteMany();
 
-  const classA = await prisma.classRoom.create({
-    data: { name: '10A', course: 10, groupName: 'A' },
+  const groupA = await prisma.group.create({
+    data: { name: '1A', course: 1, groupName: 'A' },
   });
-  const classB = await prisma.classRoom.create({
-    data: { name: '10B', course: 10, groupName: 'B' },
+  const groupB = await prisma.group.create({
+    data: { name: '1B', course: 1, groupName: 'B' },
   });
 
   const admin = await prisma.user.create({
@@ -75,7 +75,7 @@ async function main() {
       login: 'student.a',
       passwordHash,
       role: Role.student,
-      classRoomId: classA.id,
+      groupId: groupA.id,
       firstName: 'Nikita',
       lastName: 'Ivanov',
     },
@@ -86,7 +86,7 @@ async function main() {
       login: 'student.b',
       passwordHash,
       role: Role.student,
-      classRoomId: classA.id,
+      groupId: groupA.id,
       firstName: 'Maria',
       lastName: 'Sokolova',
     },
@@ -102,7 +102,7 @@ async function main() {
   const math10A = await prisma.subject.create({
     data: {
       name: 'Mathematics',
-      classRoomId: classA.id,
+      groupId: groupA.id,
       teacherId: teacherMath.id,
     },
   });
@@ -110,7 +110,7 @@ async function main() {
   const rus10A = await prisma.subject.create({
     data: {
       name: 'Russian language',
-      classRoomId: classA.id,
+      groupId: groupA.id,
       teacherId: teacherRus.id,
     },
   });
@@ -118,7 +118,7 @@ async function main() {
   await prisma.subject.create({
     data: {
       name: 'Mathematics',
-      classRoomId: classB.id,
+      groupId: groupB.id,
       teacherId: teacherMath.id,
     },
   });
@@ -127,7 +127,7 @@ async function main() {
     data: [
       {
         subjectId: math10A.id,
-        classRoomId: classA.id,
+        groupId: groupA.id,
         teacherId: teacherMath.id,
         startsAt: toUtcDate(0, 9, 0),
         endsAt: toUtcDate(0, 9, 45),
@@ -135,7 +135,7 @@ async function main() {
       },
       {
         subjectId: rus10A.id,
-        classRoomId: classA.id,
+        groupId: groupA.id,
         teacherId: teacherRus.id,
         startsAt: toUtcDate(0, 10, 0),
         endsAt: toUtcDate(0, 10, 45),
@@ -143,7 +143,7 @@ async function main() {
       },
       {
         subjectId: math10A.id,
-        classRoomId: classA.id,
+        groupId: groupA.id,
         teacherId: teacherMath.id,
         startsAt: toUtcDate(2, 11, 0),
         endsAt: toUtcDate(2, 11, 45),

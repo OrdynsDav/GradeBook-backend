@@ -14,7 +14,7 @@ describe('GradeBook API (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
 
-  let classroomId: string;
+  let groupId: string;
   let subjectId: string;
   let studentId: string;
   let teacherId: string;
@@ -241,12 +241,12 @@ describe('GradeBook API (e2e)', () => {
     await prisma.subject.deleteMany();
     await prisma.userSettings.deleteMany();
     await prisma.user.deleteMany();
-    await prisma.classRoom.deleteMany();
+    await prisma.group.deleteMany();
 
-    const classRoom = await prisma.classRoom.create({
-      data: { name: 'E2E-10A', course: 10, groupName: 'A' },
+    const group = await prisma.group.create({
+      data: { name: 'E2E-1A', course: 1, groupName: 'A' },
     });
-    classroomId = classRoom.id;
+    groupId = group.id;
 
     const teacher = await prisma.user.create({
       data: {
@@ -274,7 +274,7 @@ describe('GradeBook API (e2e)', () => {
         login: studentLogin,
         passwordHash,
         role: Role.student,
-        classRoomId: classroomId,
+        groupId,
         firstName: 'Student',
         lastName: 'Primary',
       },
@@ -284,7 +284,7 @@ describe('GradeBook API (e2e)', () => {
     const subject = await prisma.subject.create({
       data: {
         name: 'E2E Math',
-        classRoomId: classroomId,
+        groupId,
         teacherId,
       },
     });
@@ -304,7 +304,7 @@ describe('GradeBook API (e2e)', () => {
     await prisma.lesson.create({
       data: {
         subjectId,
-        classRoomId: classroomId,
+        groupId,
         teacherId,
         startsAt,
         endsAt,

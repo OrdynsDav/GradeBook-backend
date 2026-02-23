@@ -70,12 +70,12 @@ export class DashboardService {
     if (user.role === Role.student) {
       const student = await this.prisma.user.findUniqueOrThrow({
         where: { id: user.sub },
-        select: { classRoomId: true },
+        select: { groupId: true },
       });
 
       return this.prisma.lesson.count({
         where: {
-          classRoomId: student.classRoomId ?? undefined,
+          groupId: student.groupId ?? undefined,
           startsAt: { gte: dayStartUtc, lte: dayEndUtc },
         },
       });
@@ -105,12 +105,12 @@ export class DashboardService {
     if (user.role === Role.student) {
       const student = await this.prisma.user.findUniqueOrThrow({
         where: { id: user.sub },
-        select: { classRoomId: true },
+        select: { groupId: true },
       });
 
       return this.prisma.lesson.findMany({
         where: {
-          classRoomId: student.classRoomId ?? undefined,
+          groupId: student.groupId ?? undefined,
           startsAt: { gte: dayStartUtc, lte: dayEndUtc },
         },
         include: {
@@ -129,7 +129,7 @@ export class DashboardService {
         },
         include: {
           subject: { select: { id: true, name: true } },
-          classRoom: { select: { id: true, name: true } },
+          group: { select: { id: true, name: true } },
         },
         take: 5,
         orderBy: { startsAt: 'asc' },
@@ -142,7 +142,7 @@ export class DashboardService {
       },
       include: {
         subject: { select: { id: true, name: true } },
-        classRoom: { select: { id: true, name: true } },
+        group: { select: { id: true, name: true } },
       },
       take: 5,
       orderBy: { startsAt: 'asc' },

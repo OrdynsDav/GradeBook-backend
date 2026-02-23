@@ -28,15 +28,15 @@ export class SubjectsController {
   @Get()
   @ApiOperation({ summary: 'Получить список предметов' })
   @ApiOkResponse({
-    description: 'Список предметов с учителем и классом',
+    description: 'Список предметов с учителем и группой',
     schema: {
       example: [
         {
           id: 'd12de61b-4f43-4047-9d96-c4e94b9be740',
           name: 'Mathematics',
-          classRoomId: 'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488',
+          groupId: 'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488',
           teacherId: 'f72fca09-8925-4f2c-a2f8-7f039ae0f877',
-          classRoom: {
+          group: {
             id: 'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488',
             name: '10A',
           },

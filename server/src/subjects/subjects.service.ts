@@ -19,7 +19,7 @@ export class SubjectsService {
     return this.prisma.subject.findMany({
       where,
       include: {
-        classRoom: {
+        group: {
           select: { id: true, name: true },
         },
         teacher: {
@@ -121,13 +121,13 @@ export class SubjectsService {
       where: {
         id: dto.studentId,
         role: Role.student,
-        classRoomId: subject.classRoomId,
+        groupId: subject.groupId,
       },
     });
 
     if (!student) {
       throw new NotFoundException(
-        'Student not found in this classroom for the selected subject',
+        'Student not found in this group for the selected subject',
       );
     }
 
@@ -165,32 +165,32 @@ export class SubjectsService {
     if (user.role === Role.student) {
       const student = await this.prisma.user.findUniqueOrThrow({
         where: { id: user.sub },
-        select: { classRoomId: true },
+        select: { groupId: true },
       });
 
-      if (!student.classRoomId) {
-        throw new ForbiddenException('Student has no class assigned');
+      if (!student.groupId) {
+        throw new ForbiddenException('Student has no group assigned');
       }
 
-      return { classRoomId: student.classRoomId };
+      return { groupId: student.groupId };
     }
 
     if (user.role === Role.teacher) {
       return {
         teacherId: user.sub,
-        classRoomId: query.classRoomId,
+        groupId: query.groupId,
       };
     }
 
     return {
-      classRoomId: query.classRoomId,
+      groupId: query.groupId,
       teacherId: query.teacherId,
     };
   }
 
   private async buildGradesWhereForRole(
     subjectId: string,
-    subject: { classRoomId: string; teacherId: string },
+    subject: { groupId: string; teacherId: string },
     user: AuthenticatedUser,
   ) {
     if (user.role === Role.admin) {
@@ -206,10 +206,10 @@ export class SubjectsService {
 
     const student = await this.prisma.user.findUniqueOrThrow({
       where: { id: user.sub },
-      select: { classRoomId: true },
+      select: { groupId: true },
     });
 
-    if (student.classRoomId !== subject.classRoomId) {
+    if (student.groupId !== subject.groupId) {
       throw new ForbiddenException('You cannot view this subject grades');
     }
 

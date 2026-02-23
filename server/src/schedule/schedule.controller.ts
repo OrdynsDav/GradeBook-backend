@@ -50,7 +50,7 @@ export class ScheduleController {
           id: 'd12de61b-4f43-4047-9d96-c4e94b9be740',
           name: 'Mathematics',
         },
-        classRoom: {
+        group: {
           id: 'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488',
           name: '2A',
           course: 2,
@@ -113,7 +113,7 @@ export class ScheduleController {
   @ApiOperation({
     summary: 'Получить расписание на неделю',
     description:
-      'Для student возвращается расписание его класса, teacher/admin могут использовать фильтры',
+      'Для student возвращается расписание его группы, teacher/admin могут использовать фильтры',
   })
   @ApiQuery({
     name: 'date',
@@ -134,7 +134,7 @@ export class ScheduleController {
             id: 'd12de61b-4f43-4047-9d96-c4e94b9be740',
             name: 'Mathematics',
           },
-          classRoom: {
+          group: {
             id: 'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488',
             name: '10A',
           },
@@ -163,7 +163,7 @@ export class ScheduleController {
   @ApiOperation({
     summary: 'Получить расписание на день',
     description:
-      'Для student возвращается расписание его класса, teacher/admin могут использовать фильтры',
+      'Для student возвращается расписание его группы, teacher/admin могут использовать фильтры',
   })
   @ApiQuery({
     name: 'date',
@@ -184,7 +184,7 @@ export class ScheduleController {
             id: 'd12de61b-4f43-4047-9d96-c4e94b9be740',
             name: 'Mathematics',
           },
-          classRoom: {
+          group: {
             id: 'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488',
             name: '10A',
           },

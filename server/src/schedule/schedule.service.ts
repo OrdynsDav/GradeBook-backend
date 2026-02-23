@@ -34,7 +34,7 @@ export class ScheduleService {
     const lesson = await this.prisma.lesson.create({
       data: {
         subjectId: subject.id,
-        classRoomId: subject.classRoomId,
+        groupId: subject.groupId,
         teacherId: subject.teacherId,
         startsAt,
         endsAt,
@@ -42,7 +42,7 @@ export class ScheduleService {
       },
       include: {
         subject: { select: { id: true, name: true } },
-        classRoom: {
+        group: {
           select: { id: true, name: true, course: true, groupName: true },
         },
         teacher: {
@@ -68,7 +68,7 @@ export class ScheduleService {
     }
 
     let subjectId = existing.subjectId;
-    let classRoomId = existing.classRoomId;
+    let groupId = existing.groupId;
     let teacherId = existing.teacherId;
 
     if (dto.subjectId) {
@@ -79,7 +79,7 @@ export class ScheduleService {
         throw new NotFoundException('Subject not found');
       }
       subjectId = subject.id;
-      classRoomId = subject.classRoomId;
+      groupId = subject.groupId;
       teacherId = subject.teacherId;
     }
 
@@ -91,7 +91,7 @@ export class ScheduleService {
       where: { id: lessonId },
       data: {
         subjectId,
-        classRoomId,
+        groupId,
         teacherId,
         startsAt,
         endsAt,
@@ -99,7 +99,7 @@ export class ScheduleService {
       },
       include: {
         subject: { select: { id: true, name: true } },
-        classRoom: {
+        group: {
           select: { id: true, name: true, course: true, groupName: true },
         },
         teacher: {
@@ -150,7 +150,7 @@ export class ScheduleService {
       where,
       include: {
         subject: { select: { id: true, name: true } },
-        classRoom: {
+        group: {
           select: { id: true, name: true, course: true, groupName: true },
         },
         teacher: {
@@ -176,7 +176,7 @@ export class ScheduleService {
   ) {
     const where: {
       startsAt: { gte: Date; lte: Date };
-      classRoomId?: string;
+      groupId?: string;
       teacherId?: string;
     } = {
       startsAt: { gte: startUtc, lte: endUtc },
@@ -185,14 +185,14 @@ export class ScheduleService {
     if (user.role === Role.student) {
       const student = await this.prisma.user.findUniqueOrThrow({
         where: { id: user.sub },
-        select: { classRoomId: true },
+        select: { groupId: true },
       });
 
-      if (!student.classRoomId) {
-        throw new ForbiddenException('Student is not assigned to a class');
+      if (!student.groupId) {
+        throw new ForbiddenException('Student is not assigned to a group');
       }
 
-      where.classRoomId = student.classRoomId;
+      where.groupId = student.groupId;
       return where;
     }
 
@@ -204,14 +204,14 @@ export class ScheduleService {
       }
 
       where.teacherId = user.sub;
-      if (query.classRoomId) {
-        where.classRoomId = query.classRoomId;
+      if (query.groupId) {
+        where.groupId = query.groupId;
       }
       return where;
     }
 
-    if (query.classRoomId) {
-      where.classRoomId = query.classRoomId;
+    if (query.groupId) {
+      where.groupId = query.groupId;
     }
     if (query.teacherId) {
       where.teacherId = query.teacherId;
@@ -236,7 +236,7 @@ export class ScheduleService {
     endsAt: Date;
     room: string | null;
     subject: { id: string; name: string };
-    classRoom: { id: string; name: string; course: number; groupName: string };
+    group: { id: string; name: string; course: number; groupName: string };
     teacher: {
       id: string;
       firstName: string;
@@ -250,7 +250,7 @@ export class ScheduleService {
       endsAt: lesson.endsAt,
       room: lesson.room,
       subject: lesson.subject,
-      classRoom: lesson.classRoom,
+      group: lesson.group,
       teacher: lesson.teacher,
     };
   }

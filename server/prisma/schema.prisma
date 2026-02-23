@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -44,8 +41,8 @@ model User {
   firstName       String
   lastName        String
   middleName      String?
-  classRoomId     String?
-  classRoom       ClassRoom?       @relation("ClassRoomStudents", fields: [classRoomId], references: [id], onDelete: SetNull)
+  groupId         String?
+  group           Group?           @relation("GroupStudents", fields: [groupId], references: [id], onDelete: SetNull)
   taughtSubjects  Subject[]        @relation("SubjectTeacher")
   lessons         Lesson[]         @relation("LessonTeacher")
   grades          Grade[]          @relation("StudentGrades")
@@ -53,18 +50,21 @@ model User {
   notifications   Notification[]
   settings        UserSettings?
   refreshSessions RefreshSession[]
+  curatedGroups   Group[]          @relation("GroupCurator")
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
-  @@index([classRoomId, role])
+  @@index([groupId, role])
 }
 
-model ClassRoom {
+model Group {
   id        String    @id @default(uuid())
   name      String    @unique
-  course    Int
+  course    Int       // 1–4
   groupName String
-  students  User[]    @relation("ClassRoomStudents")
+  curatorId String?
+  curator   User?     @relation("GroupCurator", fields: [curatorId], references: [id], onDelete: SetNull)
+  students  User[]    @relation("GroupStudents")
   subjects  Subject[]
   lessons   Lesson[]
   createdAt DateTime  @default(now())
@@ -74,19 +74,19 @@ model ClassRoom {
 }
 
 model Subject {
-  id          String    @id @default(uuid())
-  name        String
-  classRoomId String
-  teacherId   String
-  classRoom   ClassRoom @relation(fields: [classRoomId], references: [id], onDelete: Cascade)
-  teacher     User      @relation("SubjectTeacher", fields: [teacherId], references: [id], onDelete: Restrict)
-  grades      Grade[]
-  lessons     Lesson[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id         String   @id @default(uuid())
+  name       String
+  groupId    String
+  teacherId  String
+  group      Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  teacher    User     @relation("SubjectTeacher", fields: [teacherId], references: [id], onDelete: Restrict)
+  grades     Grade[]
+  lessons    Lesson[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  @@unique([name, classRoomId])
-  @@index([classRoomId])
+  @@unique([name, groupId])
+  @@index([groupId])
   @@index([teacherId])
 }
 
@@ -110,20 +110,20 @@ model Grade {
 }
 
 model Lesson {
-  id          String    @id @default(uuid())
-  subjectId   String
-  classRoomId String
-  teacherId   String
-  startsAt    DateTime
-  endsAt      DateTime
-  room        String?
-  subject     Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  classRoom   ClassRoom @relation(fields: [classRoomId], references: [id], onDelete: Cascade)
-  teacher     User      @relation("LessonTeacher", fields: [teacherId], references: [id], onDelete: Restrict)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id         String    @id @default(uuid())
+  subjectId  String
+  groupId    String
+  teacherId  String
+  startsAt   DateTime
+  endsAt     DateTime
+  room       String?
+  subject    Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  group      Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  teacher    User      @relation("LessonTeacher", fields: [teacherId], references: [id], onDelete: Restrict)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
-  @@index([classRoomId, startsAt])
+  @@index([groupId, startsAt])
   @@index([teacherId, startsAt])
   @@index([startsAt, endsAt])
 }

@@ -13,11 +13,11 @@ export class ScheduleQueryDto {
 
   @ApiPropertyOptional({
     format: 'uuid',
-    description: 'Фильтр по классу (teacher/admin)',
+    description: 'Фильтр по группе (teacher/admin)',
   })
   @IsOptional()
   @IsUUID()
-  classRoomId?: string;
+  groupId?: string;
 
   @ApiPropertyOptional({
     format: 'uuid',

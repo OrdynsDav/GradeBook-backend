@@ -36,14 +36,14 @@ export interface LogoutRequest {
   refreshToken: string;
 }
 
-export interface ClassRoom {
+export interface Group {
   id: string;
   name: string;
   course: number;
   groupName: string;
 }
 
-/** Пользователь в ответах API. В login/refresh приходит только classRoomId; в /users/me и ответе создания пользователя может приходить classRoom. */
+/** Пользователь в ответах API. В login/refresh приходит только groupId; в /users/me и ответе создания пользователя может приходить group. */
 export interface User {
   id: string;
   login: string;
@@ -52,9 +52,9 @@ export interface User {
   lastName: string;
   middleName?: string | null;
   /** Приходит в login/refresh */
-  classRoomId?: string | null;
+  groupId?: string | null;
   /** Приходит в GET/PATCH /users/me и в ответе POST /users (admin) */
-  classRoom?: ClassRoom | null;
+  group?: Group | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -79,15 +79,23 @@ export interface UpdateMeRequest {
   middleName?: string;
 }
 
+/** Один предмет при создании учителя */
+export interface CreateTeacherSubjectItem {
+  name: string;
+  groupId: string;
+}
+
 export interface CreateUserByAdminRequest {
   role: CreatableRole;
   firstName: string;
   lastName: string;
   middleName?: string;
-  /** Обязательно для student (1–8) */
+  /** Обязательно для student (1–4) */
   course?: number;
-  /** Обязательно для student */
+  /** Обязательно для student (название или код группы, например 1A) */
   group?: string;
+  /** Для teacher: массив предметов (название + groupId); в админ-панели поле «Предметы» */
+  subjects?: CreateTeacherSubjectItem[];
   login: string;
   password: string;
 }
@@ -106,14 +114,14 @@ export interface TeacherRef {
   middleName?: string | null;
 }
 
-/** Урок в расписании (schedule/week, schedule/day, dashboard todaySchedule). classRoom в dashboard может быть только { id, name }. */
+/** Урок в расписании (schedule/week, schedule/day, dashboard todaySchedule). group в dashboard может быть только { id, name }. */
 export interface LessonItem {
   id: string;
   startsAt: string;
   endsAt: string;
   room?: string | null;
   subject: SubjectRef;
-  classRoom?: ClassRoom | { id: string; name: string };
+  group?: Group | { id: string; name: string };
   teacher: TeacherRef;
 }
 
@@ -129,16 +137,16 @@ export interface DashboardResponse {
 export interface SubjectListItem {
   id: string;
   name: string;
-  classRoomId: string;
+  groupId: string;
   teacherId: string;
-  classRoom?: { id: string; name: string };
+  group?: { id: string; name: string };
   teacher?: TeacherRef;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface SubjectsQueryParams {
-  classRoomId?: string;
+  groupId?: string;
   teacherId?: string;
 }
 
@@ -198,7 +206,7 @@ export interface UpdateLessonRequest {
 export interface ScheduleQueryParams {
   /** YYYY-MM-DD */
   date: string;
-  classRoomId?: string;
+  groupId?: string;
   teacherId?: string;
 }
 

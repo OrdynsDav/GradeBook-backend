@@ -88,7 +88,7 @@ Response `200`:
     "firstName": "Nikita",
     "lastName": "Ivanov",
     "middleName": null,
-    "classRoomId": "uuid",
+    "groupId": "uuid",
     "createdAt": "2026-02-21T16:00:00.000Z",
     "updatedAt": "2026-02-21T16:00:00.000Z"
   }
@@ -198,7 +198,7 @@ Notes:
 
 Query params (optional):
 
-- `classRoomId` (uuid)
+- `groupId` (uuid)
 - `teacherId` (uuid, для admin)
 
 ### `GET /api/v1/subjects/:id/grades`
@@ -251,12 +251,12 @@ Soft delete оценки.
 
 Дополнительные фильтры (teacher/admin):
 
-- `classRoomId`
+- `groupId`
 - `teacherId`
 
 Поведение по ролям:
 
-- `student` — только расписание своего класса
+- `student` — только расписание своей группы
 - `teacher` — только собственное расписание
 - `admin` — может фильтровать произвольно
 

@@ -20,7 +20,7 @@ export class UsersService {
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id: userId },
       include: {
-        classRoom: true,
+        group: true,
       },
     });
 
@@ -31,12 +31,12 @@ export class UsersService {
       firstName: user.firstName,
       lastName: user.lastName,
       middleName: user.middleName,
-      classRoom: user.classRoom
+      group: user.group
         ? {
-            id: user.classRoom.id,
-            name: user.classRoom.name,
-            course: user.classRoom.course,
-            groupName: user.classRoom.groupName,
+            id: user.group.id,
+            name: user.group.name,
+            course: user.group.course,
+            groupName: user.group.groupName,
           }
         : null,
       createdAt: user.createdAt,
@@ -58,7 +58,7 @@ export class UsersService {
             : undefined,
       },
       include: {
-        classRoom: true,
+        group: true,
       },
     });
 
@@ -69,12 +69,12 @@ export class UsersService {
       firstName: updatedUser.firstName,
       lastName: updatedUser.lastName,
       middleName: updatedUser.middleName,
-      classRoom: updatedUser.classRoom
+      group: updatedUser.group
         ? {
-            id: updatedUser.classRoom.id,
-            name: updatedUser.classRoom.name,
-            course: updatedUser.classRoom.course,
-            groupName: updatedUser.classRoom.groupName,
+            id: updatedUser.group.id,
+            name: updatedUser.group.name,
+            course: updatedUser.group.course,
+            groupName: updatedUser.group.groupName,
           }
         : null,
       createdAt: updatedUser.createdAt,
@@ -89,35 +89,50 @@ export class UsersService {
     const firstName = dto.firstName.trim();
     const lastName = dto.lastName.trim();
     const middleName = dto.middleName?.trim() ? dto.middleName.trim() : null;
-    const group = dto.group?.trim().toUpperCase();
-    const existing = await this.prisma.user.findUnique({ where: { login } });
-    if (existing) {
+    const groupNameOrCode = dto.group?.trim().toUpperCase();
+    const existingByLogin = await this.prisma.user.findUnique({
+      where: { login },
+    });
+    if (existingByLogin) {
       throw new ConflictException('User with this login already exists');
     }
 
-    let classRoomId: string | undefined;
+    const existingByFullName = await this.prisma.user.findFirst({
+      where: {
+        firstName,
+        lastName,
+        middleName,
+      },
+    });
+    if (existingByFullName) {
+      throw new ConflictException(
+        'User with this first name, last name and middle name already exists',
+      );
+    }
+
+    let groupId: string | undefined;
     if (role === Role.student) {
-      if (dto.course === undefined || !group) {
+      if (dto.course === undefined || !groupNameOrCode) {
         throw new BadRequestException(
           'course and group are required for student',
         );
       }
 
-      const classRoom = await this.prisma.classRoom.upsert({
+      const groupRecord = await this.prisma.group.upsert({
         where: {
           course_groupName: {
             course: dto.course,
-            groupName: group,
+            groupName: groupNameOrCode,
           },
         },
         create: {
           course: dto.course,
-          groupName: group,
-          name: `${dto.course}${group}`,
+          groupName: groupNameOrCode,
+          name: `${dto.course}${groupNameOrCode}`,
         },
         update: {},
       });
-      classRoomId = classRoom.id;
+      groupId = groupRecord.id;
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
@@ -129,10 +144,10 @@ export class UsersService {
         firstName,
         lastName,
         middleName,
-        classRoomId,
+        groupId,
       },
       include: {
-        classRoom: true,
+        group: true,
       },
     });
 
@@ -142,6 +157,37 @@ export class UsersService {
       },
     });
 
+    if (role === Role.teacher && dto.subjects?.length) {
+      for (const item of dto.subjects) {
+        const name = item.name.trim();
+        const group = await this.prisma.group.findUnique({
+          where: { id: item.groupId },
+        });
+        if (!group) {
+          throw new BadRequestException(
+            `Group not found: ${item.groupId}. Add the group first or use a valid groupId.`,
+          );
+        }
+        try {
+          await this.prisma.subject.create({
+            data: {
+              name,
+              groupId: item.groupId,
+              teacherId: user.id,
+            },
+          });
+        } catch (err: unknown) {
+          const code = err && typeof err === 'object' && 'code' in err ? (err as { code: string }).code : '';
+          if (code === 'P2002') {
+            throw new BadRequestException(
+              `Subject "${name}" already exists in this group. Use another name or group.`,
+            );
+          }
+          throw err;
+        }
+      }
+    }
+
     return {
       id: user.id,
       login: user.login,
@@ -149,12 +195,12 @@ export class UsersService {
       firstName: user.firstName,
       lastName: user.lastName,
       middleName: user.middleName,
-      classRoom: user.classRoom
+      group: user.group
         ? {
-            id: user.classRoom.id,
-            name: user.classRoom.name,
-            course: user.classRoom.course,
-            groupName: user.classRoom.groupName,
+            id: user.group.id,
+            name: user.group.name,
+            course: user.group.course,
+            groupName: user.group.groupName,
           }
         : null,
       createdAt: user.createdAt,

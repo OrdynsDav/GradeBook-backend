@@ -195,7 +195,7 @@ export class AuthService {
       firstName: user.firstName,
       lastName: user.lastName,
       middleName: user.middleName,
-      classRoomId: user.classRoomId,
+      groupId: user.groupId,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };

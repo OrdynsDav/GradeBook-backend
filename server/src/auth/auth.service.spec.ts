@@ -45,7 +45,7 @@ describe('AuthService', () => {
       firstName: 'Ivan',
       lastName: 'Petrov',
       middleName: null,
-      classRoomId: 'class-1',
+      groupId: 'class-1',
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -74,7 +74,7 @@ describe('AuthService', () => {
       firstName: 'Ivan',
       lastName: 'Petrov',
       middleName: null,
-      classRoomId: 'class-1',
+      groupId: 'class-1',
       createdAt: new Date(),
       updatedAt: new Date(),
     };
