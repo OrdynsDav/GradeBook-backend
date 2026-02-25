@@ -57,5 +57,9 @@ async function bootstrap() {
   const port = configService.get<number>('port') ?? 3000;
   const host = configService.get<string>('host') ?? '0.0.0.0';
   await app.listen(port, host);
+
+  const base = `http://${host === '0.0.0.0' ? 'localhost' : host}:${port}`;
+  // eslint-disable-next-line no-console
+  console.log(`Server is running at ${base}\nAPI: ${base}/api/v1\nDocs: ${base}/docs`);
 }
 void bootstrap();

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -7,9 +8,15 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import {
   ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
@@ -26,6 +33,7 @@ import { Roles } from '../common/security/decorators/roles.decorator';
 import type { AuthenticatedUser } from '../common/security/interfaces/authenticated-user.interface';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { ScheduleQueryDto } from './dto/schedule-query.dto';
+import { ScheduleImportService } from './schedule-import.service';
 import { ScheduleService } from './schedule.service';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 
@@ -33,7 +41,60 @@ import { UpdateLessonDto } from './dto/update-lesson.dto';
 @ApiBearerAuth()
 @Controller('schedule')
 export class ScheduleController {
-  constructor(private readonly scheduleService: ScheduleService) {}
+  constructor(
+    private readonly scheduleService: ScheduleService,
+    private readonly scheduleImportService: ScheduleImportService,
+  ) {}
+
+  @Post('import')
+  @Roles(Role.admin)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 10 * 1024 * 1024 },
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Excel (.xlsx) с расписанием: первый лист, колонки — группы, блоки по 3 строки (Предмет, Преподаватель, Кабинет)',
+        },
+      },
+      required: ['file'],
+    },
+  })
+  @ApiOperation({
+    summary: 'Импорт расписания из Excel (admin)',
+    description:
+      'Загрузка .xlsx. Ожидается: заголовок с группами (D+), блоки по 3 строки — Предмет, Преподаватель, Кабинет; в A — дата (24.02.2026), в B — время (8:15 - 9:45). Группы и учителя сопоставляются по имени; при отсутствии предмета он создаётся.',
+  })
+  @ApiOkResponse({
+    description: 'Результат импорта',
+    schema: {
+      example: { created: 42, skipped: 3, errors: ['Teacher not found: "Иванов И.И." (2026-02-24 Математика)'] },
+    },
+  })
+  @ApiUnauthorizedResponse({ description: 'Требуется access token' })
+  @ApiForbiddenResponse({ description: 'Только admin' })
+  async importFromExcel(
+    @UploadedFile() file: Express.Multer.File & { buffer?: Buffer },
+  ) {
+    if (!file) {
+      throw new BadRequestException(
+        'File is required. Send multipart/form-data with field "file".',
+      );
+    }
+    const buffer =
+      file.buffer && Buffer.isBuffer(file.buffer)
+        ? file.buffer
+        : Buffer.from((file as unknown as { buffer: ArrayBuffer }).buffer);
+    return this.scheduleImportService.importFromExcel(buffer);
+  }
 
   @Post()
   @Roles(Role.admin)

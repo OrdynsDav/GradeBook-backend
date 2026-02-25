@@ -309,6 +309,7 @@
 | DELETE | `/subjects/:id` | **Удалить предмет** |
 | GET  | `/schedule/week?date=YYYY-MM-DD` | Расписание на неделю |
 | GET  | `/schedule/day?date=YYYY-MM-DD` | Расписание на день |
+| POST | `/schedule/import` | **Импорт расписания из Excel (.xlsx)** |
 | POST | `/schedule` | **Создать урок** |
 | PATCH| `/schedule/:id` | **Обновить урок** |
 | DELETE | `/schedule/:id` | **Удалить урок** |
