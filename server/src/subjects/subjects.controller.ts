@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBadRequestResponse,
@@ -16,7 +25,9 @@ import { CurrentUser } from '../common/security/decorators/current-user.decorato
 import { Roles } from '../common/security/decorators/roles.decorator';
 import type { AuthenticatedUser } from '../common/security/interfaces/authenticated-user.interface';
 import { CreateGradeDto } from './dto/create-grade.dto';
+import { CreateSubjectDto } from './dto/create-subject.dto';
 import { SubjectsQueryDto } from './dto/subjects-query.dto';
+import { UpdateSubjectDto } from './dto/update-subject.dto';
 import { SubjectsService } from './subjects.service';
 
 @ApiTags('subjects')
@@ -58,6 +69,90 @@ export class SubjectsController {
     @Query() query: SubjectsQueryDto,
   ) {
     return this.subjectsService.list(user, query);
+  }
+
+  @Post()
+  @Roles(Role.admin)
+  @ApiOperation({ summary: 'Создать предмет (admin)' })
+  @ApiCreatedResponse({
+    description: 'Предмет создан',
+    schema: {
+      example: {
+        id: 'd12de61b-4f43-4047-9d96-c4e94b9be740',
+        name: 'Математика',
+        groupId: 'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488',
+        teacherId: 'f72fca09-8925-4f2c-a2f8-7f039ae0f877',
+        group: { id: 'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488', name: '10A' },
+        teacher: {
+          id: 'f72fca09-8925-4f2c-a2f8-7f039ae0f877',
+          firstName: 'Ivan',
+          lastName: 'Petrov',
+          middleName: 'Sergeevich',
+        },
+        createdAt: '2026-02-21T16:00:00.000Z',
+        updatedAt: '2026-02-21T16:00:00.000Z',
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Группа/учитель не найдены или предмет с таким именем уже есть в группе',
+  })
+  @ApiUnauthorizedResponse({ description: 'Требуется access token' })
+  @ApiForbiddenResponse({ description: 'Только admin' })
+  create(@Body() dto: CreateSubjectDto) {
+    return this.subjectsService.create(dto);
+  }
+
+  @Patch(':id')
+  @Roles(Role.admin)
+  @ApiOperation({ summary: 'Обновить предмет (admin)' })
+  @ApiParam({ name: 'id', description: 'ID предмета', format: 'uuid' })
+  @ApiOkResponse({
+    description: 'Предмет обновлён',
+    schema: {
+      example: {
+        id: 'd12de61b-4f43-4047-9d96-c4e94b9be740',
+        name: 'Математика',
+        groupId: 'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488',
+        teacherId: 'f72fca09-8925-4f2c-a2f8-7f039ae0f877',
+        group: { id: 'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488', name: '10A' },
+        teacher: {
+          id: 'f72fca09-8925-4f2c-a2f8-7f039ae0f877',
+          firstName: 'Ivan',
+          lastName: 'Petrov',
+          middleName: 'Sergeevich',
+        },
+        createdAt: '2026-02-21T16:00:00.000Z',
+        updatedAt: '2026-02-21T16:00:00.000Z',
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Группа/учитель не найдены или дубликат (name + group)',
+  })
+  @ApiUnauthorizedResponse({ description: 'Требуется access token' })
+  @ApiForbiddenResponse({ description: 'Только admin' })
+  @ApiNotFoundResponse({ description: 'Предмет не найден' })
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateSubjectDto,
+  ) {
+    return this.subjectsService.update(id, dto);
+  }
+
+  @Delete(':id')
+  @Roles(Role.admin)
+  @ApiOperation({ summary: 'Удалить предмет (admin)' })
+  @ApiParam({ name: 'id', description: 'ID предмета', format: 'uuid' })
+  @ApiOkResponse({
+    description: 'Предмет удалён',
+    schema: { example: { id: 'd12de61b-4f43-4047-9d96-c4e94b9be740' } },
+  })
+  @ApiUnauthorizedResponse({ description: 'Требуется access token' })
+  @ApiForbiddenResponse({ description: 'Только admin' })
+  @ApiNotFoundResponse({ description: 'Предмет не найден' })
+  remove(@Param('id') id: string) {
+    return this.subjectsService.remove(id);
   }
 
   @Get(':id/grades')

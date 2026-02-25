@@ -286,7 +286,7 @@
 - **Создание пользователя:** `CreateUserByAdminRequest`, `CreateTeacherSubjectItem`, `CreatableRole`
 - **Группы:** `GroupListItem`, `CreateGroupRequest`
 - **Расписание:** `LessonItem`, `CreateLessonRequest`, `UpdateLessonRequest`, `SubjectListItem`, `ScheduleQueryParams`
-- **Предметы:** `SubjectListItem`, `SubjectsQueryParams`
+- **Предметы:** `SubjectListItem`, `SubjectsQueryParams`, `CreateSubjectRequest`, `UpdateSubjectRequest`
 
 ---
 
@@ -301,6 +301,9 @@
 | GET  | `/groups` | Список групп (для выпадающих списков) |
 | POST | `/groups` | **Создать группу** |
 | GET  | `/subjects` | Список предметов (для выбора при создании урока) |
+| POST | `/subjects` | **Создать предмет** |
+| PATCH| `/subjects/:id` | **Обновить предмет** |
+| DELETE | `/subjects/:id` | **Удалить предмет** |
 | GET  | `/schedule/week?date=YYYY-MM-DD` | Расписание на неделю |
 | GET  | `/schedule/day?date=YYYY-MM-DD` | Расписание на день |
 | POST | `/schedule` | **Создать урок** |

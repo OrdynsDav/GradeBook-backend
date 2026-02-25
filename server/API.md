@@ -201,6 +201,44 @@ Query params (optional):
 - `groupId` (uuid)
 - `teacherId` (uuid, для admin)
 
+### `POST /api/v1/subjects` (admin)
+
+Создать предмет. К предмету (по его id) привязываются оценки и уроки.
+
+Request:
+
+```json
+{
+  "name": "Математика",
+  "groupId": "uuid",
+  "teacherId": "uuid"
+}
+```
+
+- `groupId` — существующая группа (создайте через `POST /groups`, если нет).
+- `teacherId` — существующий пользователь с ролью `teacher`.
+- В одной группе не может быть двух предметов с одинаковым именем (уникальность `name` + `groupId`).
+
+### `PATCH /api/v1/subjects/:id` (admin)
+
+Обновить предмет (название, группа, учитель). Все поля опциональны.
+
+Request:
+
+```json
+{
+  "name": "Математика",
+  "groupId": "uuid",
+  "teacherId": "uuid"
+}
+```
+
+### `DELETE /api/v1/subjects/:id` (admin)
+
+Удалить предмет. Оценки и уроки по этому предмету удаляются каскадно.
+
+Response `200`: `{ "id": "uuid" }`
+
 ### `GET /api/v1/subjects/:id/grades`
 
 Оценки по предмету.

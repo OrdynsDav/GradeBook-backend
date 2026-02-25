@@ -167,6 +167,18 @@ export interface SubjectListItem {
   updatedAt?: string;
 }
 
+export interface CreateSubjectRequest {
+  name: string;
+  groupId: string;
+  teacherId: string;
+}
+
+export interface UpdateSubjectRequest {
+  name?: string;
+  groupId?: string;
+  teacherId?: string;
+}
+
 export interface SubjectsQueryParams {
   groupId?: string;
   teacherId?: string;
