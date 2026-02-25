@@ -283,7 +283,7 @@
 Используйте типы из `frontend-types.ts` в этой же папке:
 
 - **Auth:** `LoginRequest`, `AuthResponse`, `User`
-- **Создание пользователя:** `CreateUserByAdminRequest`, `CreateTeacherSubjectItem`, `CreatableRole`
+- **Создание/редактирование пользователя:** `CreateUserByAdminRequest`, `UpdateUserByAdminRequest`, `CreateTeacherSubjectItem`, `CreatableRole`
 - **Группы:** `GroupListItem`, `CreateGroupRequest`
 - **Расписание:** `LessonItem`, `CreateLessonRequest`, `UpdateLessonRequest`, `SubjectListItem`, `ScheduleQueryParams`
 - **Предметы:** `SubjectListItem`, `SubjectsQueryParams`, `CreateSubjectRequest`, `UpdateSubjectRequest`
@@ -297,7 +297,10 @@
 | POST | `/auth/login` | Вход (логин/пароль админа) |
 | GET  | `/users/me` | Текущий пользователь (проверка роли) |
 | GET  | `/users` | **Список всех пользователей (admin)** |
+| GET  | `/users/:id` | **Получить пользователя по ID (admin)** |
 | POST | `/users` | **Создать пользователя (student/teacher)** |
+| PATCH| `/users/:id` | **Обновить пользователя (admin)** |
+| DELETE | `/users/:id` | **Удалить пользователя (admin)** |
 | GET  | `/groups` | Список групп (для выпадающих списков) |
 | POST | `/groups` | **Создать группу** |
 | GET  | `/subjects` | Список предметов (для выбора при создании урока) |

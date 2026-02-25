@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { Role } from '@prisma/client';
@@ -11,6 +12,7 @@ import {
   CreatableRole,
 } from './dto/create-user-by-admin.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
+import { UpdateUserByAdminDto } from './dto/update-user-by-admin.dto';
 
 @Injectable()
 export class UsersService {
@@ -66,6 +68,106 @@ export class UsersService {
       include: { group: true },
     });
     return this.toUserResponse(user);
+  }
+
+  async getById(id: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: { group: true },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return this.toUserResponse(user);
+  }
+
+  async updateByAdmin(id: string, dto: UpdateUserByAdminDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: { group: true },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (dto.login !== undefined) {
+      const login = dto.login.trim().toLowerCase();
+      const existing = await this.prisma.user.findUnique({
+        where: { login },
+      });
+      if (existing && existing.id !== id) {
+        throw new ConflictException('User with this login already exists');
+      }
+    }
+
+    if (dto.groupId !== undefined) {
+      const group = await this.prisma.group.findUnique({
+        where: { id: dto.groupId },
+      });
+      if (!group) {
+        throw new BadRequestException(`Group not found: ${dto.groupId}`);
+      }
+    }
+
+    const data: {
+      firstName?: string;
+      lastName?: string;
+      middleName?: string | null;
+      groupId?: string;
+      login?: string;
+      passwordHash?: string;
+    } = {};
+    if (dto.firstName !== undefined) data.firstName = dto.firstName.trim();
+    if (dto.lastName !== undefined) data.lastName = dto.lastName.trim();
+    if (dto.middleName !== undefined) {
+      data.middleName = dto.middleName.trim() || null;
+    }
+    if (dto.groupId !== undefined) data.groupId = dto.groupId;
+    if (dto.login !== undefined) data.login = dto.login.trim().toLowerCase();
+    if (dto.password !== undefined) {
+      data.passwordHash = await bcrypt.hash(dto.password, 10);
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data,
+      include: { group: true },
+    });
+    return this.toUserResponse(updated);
+  }
+
+  async removeByAdmin(id: string, currentUserId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: {
+            taughtSubjects: true,
+            lessons: true,
+            createdGrades: true,
+          },
+        },
+      },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    if (id === currentUserId) {
+      throw new BadRequestException('Cannot delete your own account');
+    }
+    if (
+      user._count.taughtSubjects > 0 ||
+      user._count.lessons > 0 ||
+      user._count.createdGrades > 0
+    ) {
+      throw new BadRequestException(
+        'Cannot delete user: they have linked subjects, lessons, or created grades. Remove or reassign them first.',
+      );
+    }
+    await this.prisma.user.delete({
+      where: { id },
+    });
+    return { id };
   }
 
   async updateMe(userId: string, dto: UpdateMeDto) {

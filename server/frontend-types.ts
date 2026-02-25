@@ -105,6 +105,17 @@ export interface CreateUserByAdminRequest {
   password: string;
 }
 
+/** Обновление пользователя админом (все поля опциональны) */
+export interface UpdateUserByAdminRequest {
+  firstName?: string;
+  lastName?: string;
+  middleName?: string;
+  /** UUID группы (для студента) */
+  groupId?: string;
+  login?: string;
+  password?: string;
+}
+
 // ============ Groups ============
 
 export interface GroupListItem {
