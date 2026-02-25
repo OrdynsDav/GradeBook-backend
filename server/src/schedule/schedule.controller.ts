@@ -89,11 +89,21 @@ export class ScheduleController {
         'File is required. Send multipart/form-data with field "file".',
       );
     }
-    const buffer =
-      file.buffer && Buffer.isBuffer(file.buffer)
-        ? file.buffer
-        : Buffer.from((file as unknown as { buffer: ArrayBuffer }).buffer);
+    const buffer = this.toBuffer(file);
     return this.scheduleImportService.importFromExcel(buffer);
+  }
+
+  private toBuffer(file: Express.Multer.File & { buffer?: unknown }): Buffer {
+    const data = file.buffer as Buffer | ArrayBuffer | ArrayBufferView | null | undefined;
+    if (Buffer.isBuffer(data)) return data;
+    if (data instanceof ArrayBuffer) return Buffer.from(data);
+    if (ArrayBuffer.isView(data)) {
+      const view = data as ArrayBufferView;
+      return Buffer.from(view.buffer, view.byteOffset, view.byteLength);
+    }
+    throw new BadRequestException(
+      'Invalid file upload: expected binary data. Use multipart/form-data with field "file" and the Excel file as binary.',
+    );
   }
 
   @Post()
