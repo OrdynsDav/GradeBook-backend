@@ -32,6 +32,7 @@ import { CurrentUser } from '../common/security/decorators/current-user.decorato
 import { Roles } from '../common/security/decorators/roles.decorator';
 import type { AuthenticatedUser } from '../common/security/interfaces/authenticated-user.interface';
 import { CreateLessonDto } from './dto/create-lesson.dto';
+import { ImportScheduleBodyDto } from './dto/import-schedule-body.dto';
 import { ScheduleQueryDto } from './dto/schedule-query.dto';
 import { ScheduleImportService } from './schedule-import.service';
 import { ScheduleService } from './schedule.service';
@@ -54,24 +55,31 @@ export class ScheduleController {
       limits: { fileSize: 10 * 1024 * 1024 },
     }),
   )
-  @ApiConsumes('multipart/form-data')
+  @ApiConsumes('multipart/form-data', 'application/json')
   @ApiBody({
+    description:
+      'Либо multipart с полем "file", либо JSON: { "fileBase64": "<base64>" }',
     schema: {
-      type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-          description: 'Excel (.xlsx) с расписанием: первый лист, колонки — группы, блоки по 3 строки (Предмет, Преподаватель, Кабинет)',
+      oneOf: [
+        {
+          type: 'object',
+          properties: {
+            file: { type: 'string', format: 'binary' },
+          },
+          required: ['file'],
         },
-      },
-      required: ['file'],
+        {
+          type: 'object',
+          properties: { fileBase64: { type: 'string', description: 'Содержимое .xlsx в base64' } },
+          required: ['fileBase64'],
+        },
+      ],
     },
   })
   @ApiOperation({
     summary: 'Импорт расписания из Excel (admin)',
     description:
-      'Загрузка .xlsx. Ожидается: заголовок с группами (D+), блоки по 3 строки — Предмет, Преподаватель, Кабинет; в A — дата (24.02.2026), в B — время (8:15 - 9:45). Группы и учителя сопоставляются по имени; при отсутствии предмета он создаётся.',
+      'Загрузка .xlsx: multipart/form-data с полем "file" или JSON с полем "fileBase64". Ожидается структура: заголовок с группами (D+), блоки по 3 строки — Предмет, Преподаватель, Кабинет.',
   })
   @ApiOkResponse({
     description: 'Результат импорта',
@@ -83,13 +91,28 @@ export class ScheduleController {
   @ApiForbiddenResponse({ description: 'Только admin' })
   async importFromExcel(
     @UploadedFile() file: Express.Multer.File & { buffer?: Buffer },
+    @Body() body?: ImportScheduleBodyDto,
   ) {
-    if (!file) {
+    let buffer: Buffer | null = null;
+    if (file) {
+      try {
+        buffer = this.toBuffer(file);
+      } catch {
+        buffer = null;
+      }
+    }
+    if (!buffer && body?.fileBase64) {
+      try {
+        buffer = Buffer.from(body.fileBase64, 'base64');
+      } catch {
+        throw new BadRequestException('Invalid fileBase64: must be valid base64.');
+      }
+    }
+    if (!buffer || buffer.length === 0) {
       throw new BadRequestException(
-        'File is required. Send multipart/form-data with field "file".',
+        'File is required. Send multipart/form-data with field "file", or JSON body with "fileBase64" (Excel file content in base64).',
       );
     }
-    const buffer = this.toBuffer(file);
     return this.scheduleImportService.importFromExcel(buffer);
   }
 
