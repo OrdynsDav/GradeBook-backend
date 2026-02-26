@@ -145,6 +145,27 @@ export class SubjectsService {
     return { id };
   }
 
+  async getById(id: string) {
+    const subject = await this.prisma.subject.findUnique({
+      where: { id },
+      include: {
+        group: { select: { id: true, name: true } },
+        teacher: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            middleName: true,
+          },
+        },
+      },
+    });
+    if (!subject) {
+      throw new NotFoundException('Subject not found');
+    }
+    return subject;
+  }
+
   async list(user: AuthenticatedUser, query: SubjectsQueryDto) {
     const where = await this.buildSubjectsWhere(user, query);
 

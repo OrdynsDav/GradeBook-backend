@@ -128,6 +128,30 @@ export class ScheduleService {
     return { success: true };
   }
 
+  async getLessonById(lessonId: string) {
+    const lesson = await this.prisma.lesson.findUnique({
+      where: { id: lessonId },
+      include: {
+        subject: { select: { id: true, name: true } },
+        group: {
+          select: { id: true, name: true, course: true, groupName: true },
+        },
+        teacher: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            middleName: true,
+          },
+        },
+      },
+    });
+    if (!lesson) {
+      throw new NotFoundException('Lesson not found');
+    }
+    return this.toLessonResponse(lesson);
+  }
+
   async getWeek(user: AuthenticatedUser, query: ScheduleQueryDto) {
     const range = getMoscowWeekRangeUtc(query.date);
     return this.findLessons(user, query, range.startUtc, range.endUtc);

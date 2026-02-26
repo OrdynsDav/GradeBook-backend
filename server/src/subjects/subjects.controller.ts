@@ -103,6 +103,37 @@ export class SubjectsController {
     return this.subjectsService.create(dto);
   }
 
+  @Get(':id')
+  @Roles(Role.admin)
+  @ApiOperation({ summary: 'Получить предмет по ID (admin)' })
+  @ApiParam({ name: 'id', description: 'ID предмета', format: 'uuid' })
+  @ApiOkResponse({
+    description: 'Предмет с группой и учителем',
+    schema: {
+      example: {
+        id: 'd12de61b-4f43-4047-9d96-c4e94b9be740',
+        name: 'Mathematics',
+        groupId: 'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488',
+        teacherId: 'f72fca09-8925-4f2c-a2f8-7f039ae0f877',
+        group: { id: 'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488', name: '10A' },
+        teacher: {
+          id: 'f72fca09-8925-4f2c-a2f8-7f039ae0f877',
+          firstName: 'Ivan',
+          lastName: 'Petrov',
+          middleName: 'Sergeevich',
+        },
+        createdAt: '2026-02-21T16:00:00.000Z',
+        updatedAt: '2026-02-21T16:00:00.000Z',
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({ description: 'Требуется access token' })
+  @ApiForbiddenResponse({ description: 'Только admin' })
+  @ApiNotFoundResponse({ description: 'Предмет не найден' })
+  getById(@Param('id') id: string) {
+    return this.subjectsService.getById(id);
+  }
+
   @Patch(':id')
   @Roles(Role.admin)
   @ApiOperation({ summary: 'Обновить предмет (admin)' })

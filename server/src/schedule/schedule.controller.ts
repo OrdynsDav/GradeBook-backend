@@ -302,4 +302,39 @@ export class ScheduleController {
   ) {
     return this.scheduleService.getDay(user, query);
   }
+
+  @Get(':id')
+  @Roles(Role.admin)
+  @ApiOperation({ summary: 'Получить урок по ID (admin)' })
+  @ApiParam({ name: 'id', format: 'uuid', description: 'ID урока' })
+  @ApiOkResponse({
+    description: 'Урок с предметом, группой и учителем',
+    schema: {
+      example: {
+        id: '0df0eab6-a247-4dcf-ac73-9bb507f9d8cf',
+        startsAt: '2026-02-21T06:00:00.000Z',
+        endsAt: '2026-02-21T06:45:00.000Z',
+        room: '101',
+        subject: { id: 'd12de61b-4f43-4047-9d96-c4e94b9be740', name: 'Mathematics' },
+        group: {
+          id: 'e2f08ca8-6866-4df6-8d43-1c2f4d8f4488',
+          name: '2A',
+          course: 2,
+          groupName: 'A',
+        },
+        teacher: {
+          id: 'f72fca09-8925-4f2c-a2f8-7f039ae0f877',
+          firstName: 'Ivan',
+          lastName: 'Petrov',
+          middleName: 'Sergeevich',
+        },
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({ description: 'Требуется access token' })
+  @ApiForbiddenResponse({ description: 'Только admin' })
+  @ApiNotFoundResponse({ description: 'Урок не найден' })
+  getLessonById(@Param('id') id: string) {
+    return this.scheduleService.getLessonById(id);
+  }
 }
