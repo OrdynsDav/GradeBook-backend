@@ -36,6 +36,12 @@ function normalizeTeacherName(cell: string): { lastName: string; initials: strin
   return { lastName, initials };
 }
 
+function normalizeSubjectName(name: string): string {
+  return name
+    .replace(/^\s*(?:[Уу][Пп][Пп]\.?\s*\d+(?:\.\d+)?\s*[-:)]?\s*)+/u, '')
+    .trim();
+}
+
 /** Парсит дату из ячейки: "Вторник 24.02.2026г." или "24.02.2026" */
 function parseDateFromCell(cell: unknown): string | null {
   const s = String(cell ?? '').trim();
@@ -61,7 +67,7 @@ function parseTimeRangeFromCell(cell: unknown): { start: string; end: string } |
 
 @Injectable()
 export class ScheduleImportService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /** Ячейка похожа на метку (Предмет/Преподаватель/Кабинет/Столбец и т.д.), а не на название группы */
   private static isLabelCell(s: string): boolean {
@@ -256,7 +262,7 @@ export class ScheduleImportService {
     groupId: string,
     teacherId: string,
   ) {
-    const name = subjectName.trim();
+    const name = normalizeSubjectName(subjectName);
     if (!name) return null;
     let subject = await this.prisma.subject.findUnique({
       where: {

@@ -14,7 +14,21 @@ import { UpdateSubjectDto } from './dto/update-subject.dto';
 
 @Injectable()
 export class SubjectsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
+
+  private normalizeSubjectName(name: string): string {
+    // Remove curriculum prefixes like "УПп.01" from subject names.
+    return name
+      .replace(/^\s*(?:[Уу][Пп][Пп]\.?\s*\d+(?:\.\d+)?\s*[-:)]?\s*)+/u, '')
+      .trim();
+  }
+
+  private mapSubjectResponse<T extends { name: string }>(subject: T): T {
+    return {
+      ...subject,
+      name: this.normalizeSubjectName(subject.name),
+    };
+  }
 
   async create(dto: CreateSubjectDto) {
     const [group, teacher] = await Promise.all([
@@ -33,9 +47,9 @@ export class SubjectsService {
         `Teacher not found or not a teacher: ${dto.teacherId}.`,
       );
     }
-    const name = dto.name.trim();
+    const name = this.normalizeSubjectName(dto.name);
     try {
-      return await this.prisma.subject.create({
+      const created = await this.prisma.subject.create({
         data: {
           name,
           groupId: dto.groupId,
@@ -53,6 +67,7 @@ export class SubjectsService {
           },
         },
       });
+      return this.mapSubjectResponse(created);
     } catch (err: unknown) {
       const code =
         err && typeof err === 'object' && 'code' in err
@@ -75,7 +90,10 @@ export class SubjectsService {
     if (!subject) {
       throw new NotFoundException('Subject not found');
     }
-    const name = dto.name !== undefined ? dto.name.trim() : subject.name;
+    const name =
+      dto.name !== undefined
+        ? this.normalizeSubjectName(dto.name)
+        : this.normalizeSubjectName(subject.name);
     const groupId = dto.groupId ?? subject.groupId;
     const teacherId = dto.teacherId ?? subject.teacherId;
 
@@ -99,7 +117,7 @@ export class SubjectsService {
     }
 
     try {
-      return await this.prisma.subject.update({
+      const updated = await this.prisma.subject.update({
         where: { id },
         data: {
           ...(dto.name !== undefined && { name }),
@@ -118,6 +136,7 @@ export class SubjectsService {
           },
         },
       });
+      return this.mapSubjectResponse(updated);
     } catch (err: unknown) {
       const code =
         err && typeof err === 'object' && 'code' in err
@@ -163,13 +182,13 @@ export class SubjectsService {
     if (!subject) {
       throw new NotFoundException('Subject not found');
     }
-    return subject;
+    return this.mapSubjectResponse(subject);
   }
 
   async list(user: AuthenticatedUser, query: SubjectsQueryDto) {
     const where = await this.buildSubjectsWhere(user, query);
 
-    return this.prisma.subject.findMany({
+    const subjects = await this.prisma.subject.findMany({
       where,
       include: {
         group: {
@@ -186,6 +205,7 @@ export class SubjectsService {
       },
       orderBy: { name: 'asc' },
     });
+    return subjects.map((subject) => this.mapSubjectResponse(subject));
   }
 
   async getGrades(subjectId: string, user: AuthenticatedUser) {

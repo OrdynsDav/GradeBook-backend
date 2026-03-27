@@ -7,7 +7,14 @@ import { MOSCOW_TIME_ZONE } from '../common/utils/date-time.util';
 
 @Injectable()
 export class DashboardService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
+
+  private sanitizeSubjectName(name: string): string {
+    // Remove curriculum prefixes like "УПп.01" from API responses.
+    return name
+      .replace(/^\s*(?:[Уу][Пп][Пп]\.?\s*\d+(?:\.\d+)?\s*[-:)]?\s*)+/u, '')
+      .trim();
+  }
 
   async getDashboard(user: AuthenticatedUser) {
     const nowMoscow = DateTime.now().setZone(MOSCOW_TIME_ZONE);
@@ -24,11 +31,19 @@ export class DashboardService {
         this.getTodaySchedule(user, dayStartUtc, dayEndUtc),
       ]);
 
+    const normalizedSchedule = todaySchedule.map((lesson) => ({
+      ...lesson,
+      subject: {
+        ...lesson.subject,
+        name: this.sanitizeSubjectName(lesson.subject.name),
+      },
+    }));
+
     return {
       averageGrade,
       lessonsToday,
       unreadNotifications,
-      todaySchedule,
+      todaySchedule: normalizedSchedule,
     };
   }
 

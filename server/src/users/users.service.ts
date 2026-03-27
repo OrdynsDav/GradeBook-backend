@@ -16,7 +16,13 @@ import { UpdateUserByAdminDto } from './dto/update-user-by-admin.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
+
+  private normalizeSubjectName(name: string): string {
+    return name
+      .replace(/^\s*(?:[Уу][Пп][Пп]\.?\s*\d+(?:\.\d+)?\s*[-:)]?\s*)+/u, '')
+      .trim();
+  }
 
   private toUserResponse(user: {
     id: string;
@@ -43,11 +49,11 @@ export class UsersService {
       middleName: user.middleName,
       group: user.group
         ? {
-            id: user.group.id,
-            name: user.group.name,
-            course: user.group.course,
-            groupName: user.group.groupName,
-          }
+          id: user.group.id,
+          name: user.group.name,
+          course: user.group.course,
+          groupName: user.group.groupName,
+        }
         : null,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
@@ -265,7 +271,7 @@ export class UsersService {
 
     if (role === Role.teacher && dto.subjects?.length) {
       for (const item of dto.subjects) {
-        const name = item.name.trim();
+        const name = this.normalizeSubjectName(item.name);
         let groupIdsToUse: string[] | null = null;
         if (item.groups?.length) {
           const normalized = [

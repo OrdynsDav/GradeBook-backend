@@ -17,7 +17,14 @@ import { UpdateLessonDto } from './dto/update-lesson.dto';
 
 @Injectable()
 export class ScheduleService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
+
+  private sanitizeSubjectName(name: string): string {
+    // Remove curriculum prefixes like "УПп.01" from API responses.
+    return name
+      .replace(/^\s*(?:[Уу][Пп][Пп]\.?\s*\d+(?:\.\d+)?\s*[-:)]?\s*)+/u, '')
+      .trim();
+  }
 
   async createLesson(dto: CreateLessonDto) {
     const subject = await this.prisma.subject.findUnique({
@@ -273,7 +280,10 @@ export class ScheduleService {
       startsAt: lesson.startsAt,
       endsAt: lesson.endsAt,
       room: lesson.room,
-      subject: lesson.subject,
+      subject: {
+        ...lesson.subject,
+        name: this.sanitizeSubjectName(lesson.subject.name),
+      },
       group: lesson.group,
       teacher: lesson.teacher,
     };
